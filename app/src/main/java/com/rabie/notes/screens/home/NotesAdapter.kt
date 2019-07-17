@@ -1,12 +1,18 @@
 package com.rabie.notes.screens.home
 
+import android.app.AlertDialog
+import android.content.DialogInterface
+import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.FirebaseDatabase
 import com.rabie.notes.R
 import com.rabie.notes.data.models.Note
 
@@ -35,32 +41,80 @@ class NotesAdapter : RecyclerView.Adapter<NotesAdapter.ItemViewHolder> {
 
     override fun onBindViewHolder(holder: ItemViewHolder, p1: Int) {
         Log.e("onBindViewHolder", p1.toString())
-        holder.tvUserName.text = "${holder.itemView.context.getText(R.string.at)}${notes.get(p1).userName} "
-        var items = ArrayList<Note>()
-        val note1 = Note("Ahmed", "//Sortie 11 mai", "carburant", -120.0, "café in rest station mediouna")
-        items.add(note1)
-        for (i in 1..8) {
-            val note = Note("Ahmed", "", "cafe", 12.0, "café in rest station mediouna")
-            items.add(note)
+        val note=notes.get(p1)
+        holder.tvUserName.text = note.userName
+        if (!note.title.isEmpty()) {
+            holder.tvTitle.text = note.title
+        } else {
+            holder.tvTitle.visibility = View.GONE
         }
-        val noteItemAdapter = NoteItemAdapter(items)
-        val layoutManager = LinearLayoutManager(holder.itemView.context)
-        layoutManager.orientation = RecyclerView.VERTICAL
-        holder.recyclerView.layoutManager=layoutManager
-        holder.recyclerView.isNestedScrollingEnabled=false
-        holder.recyclerView.adapter = noteItemAdapter
+        holder.tvDesignation.text = note.designation
+        setPriceText(holder.tvPrice, note.price)
+        holder.tvDescription.text=note.description
+        holder.ivEdite.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(p0: View?) {
+                Toast.makeText(p0!!.context,"edit clicked", Toast.LENGTH_SHORT).show()
+            }
+
+        })
+
+        holder.ivDelete.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(p0: View?) {
+                AlertDialog.Builder(holder.itemView.context)
+                    .setTitle("Notes")
+                    .setMessage("Are you sure , you want to delete this note?")
+                    .setPositiveButton("Delete",DialogInterface.OnClickListener { dialogInterface, i ->
+                        val database = FirebaseDatabase.getInstance()
+                        val myRef = database.getReference("notes")
+                        myRef.child(note.id).removeValue()
+                        Toast.makeText(p0!!.context,"delete clicked", Toast.LENGTH_SHORT).show()
+                    })
+                    .setNegativeButton("Cancel",DialogInterface.OnClickListener { dialogInterface, i ->
+                        dialogInterface.dismiss()
+                    })
+                    .create().show()
+
+            }
+
+        })
+
 
     }
 
 
     class ItemViewHolder : RecyclerView.ViewHolder {
         var tvUserName: TextView
-        var recyclerView: RecyclerView
+        var tvTitle: TextView
+        var tvDesignation: TextView
+        var tvDescription: TextView
+        var tvPrice: TextView
+        var ivEdite: ImageView
+        var ivDelete: ImageView
 
 
         constructor(itemView: View) : super(itemView) {
             tvUserName = itemView.findViewById(R.id.tvName)
-            recyclerView = itemView.findViewById(R.id.recyclerView)
+            tvTitle = itemView.findViewById<TextView>(R.id.tvTitle)
+            tvDesignation = itemView.findViewById<TextView>(R.id.tvDesignation)
+            tvDescription = itemView.findViewById<TextView>(R.id.tvDescription)
+            tvPrice = itemView.findViewById<TextView>(R.id.tvPrice)
+            ivEdite = itemView.findViewById<ImageView>(R.id.ivEdit)
+            ivDelete = itemView.findViewById<ImageView>(R.id.ivDelete)
+        }
+    }
+    fun setPriceText(tvPrice: TextView, price: Double) {
+        tvPrice.text = price.toString()
+        if (price >= 0) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                tvPrice.setTextColor(tvPrice.context.resources.getColor(R.color.green, null))
+            else
+                tvPrice.setTextColor(tvPrice.context.resources.getColor(R.color.green))
+
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                tvPrice.setTextColor(tvPrice.context.resources.getColor(R.color.red, null))
+            else
+                tvPrice.setTextColor(tvPrice.context.resources.getColor(R.color.red))
         }
     }
 }
