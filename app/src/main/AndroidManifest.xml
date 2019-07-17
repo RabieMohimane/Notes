@@ -4,6 +4,11 @@
           package="com.rabie.notes">
 
     <dist:module dist:instant="true"/>
+    <supports-screens android:smallScreens="false"
+                      android:normalScreens="false"
+                      android:largeScreens="true"
+                      android:requiresSmallestWidthDp="600"
+                      android:xlargeScreens="true"/>
 
     <application
             android:allowBackup="true"
