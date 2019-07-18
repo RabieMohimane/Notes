@@ -77,6 +77,8 @@ class MainActivity : AppCompatActivity() {
 
         })
     }
+
+
      fun setAppStatusListener(){
          val connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected")
          connectedRef.addValueEventListener(object : ValueEventListener {

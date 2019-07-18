@@ -17,6 +17,7 @@ import com.rabie.notes.R
 import com.rabie.notes.data.models.Note
 import com.rabie.notes.screens.addnote.AddNoteActivity
 import android.graphics.Color
+import com.rabie.notes.screens.NotesOfUserActivity
 import java.util.*
 
 
@@ -89,6 +90,14 @@ class NotesAdapter : RecyclerView.Adapter<NotesAdapter.ItemViewHolder> {
                     })
                     .create().show()
 
+            }
+
+        })
+        holder.tvUserName.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(p0: View?) {
+                val intent=Intent(holder.itemView.context,NotesOfUserActivity::class.java)
+                intent.putExtra("name",note.userName)
+                holder.itemView.context.startActivity(intent)
             }
 
         })
