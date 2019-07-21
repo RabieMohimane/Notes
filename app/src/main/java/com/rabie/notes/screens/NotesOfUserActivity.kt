@@ -12,6 +12,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.rabie.notes.R
 import com.rabie.notes.data.models.Note
+import com.rabie.notes.data.models.SpannableNote
 import com.rabie.notes.screens.home.NotesAdapter
 import kotlinx.android.synthetic.main.activity_notes_of_user.*
 
@@ -34,14 +35,14 @@ class NotesOfUserActivity : AppCompatActivity() {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
                 Log.e("datasnapshot", p0.toString())
-                var items = ArrayList<Note>()
+                var items = ArrayList<SpannableNote>()
                 p0.children.forEach {
-                    val value = it.getValue(Note::class.java)
+                    val value = it.getValue(SpannableNote::class.java)
                     if (value != null) {
                         Log.e("read value", "Value is: " + value!!.toString())
                         value.id=it.key.toString()
                         items.add(value)
-                        total += value.price
+                     //   total += value.price
                     }
 
                 }

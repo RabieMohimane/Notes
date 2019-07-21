@@ -19,11 +19,16 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".screens.NotesOfUserActivity"
-                  android:parentActivityName=".screens.home.MainActivity">
+        <activity android:name=".screens.addnotespannable.AddNoteWithSpannabLe"
+                  android:theme="@style/myDialog">
+
+        </activity>
+        <activity
+                android:name=".screens.NotesOfUserActivity"
+                android:parentActivityName=".screens.home.MainActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
-                    android:value=".screens.home.MainActivity" />
+                    android:value=".screens.home.MainActivity"/>
         </activity>
         <activity
                 android:name=".screens.addnote.AddNoteActivity"
@@ -36,6 +41,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
         </activity>
 
         <meta-data

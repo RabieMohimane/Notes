@@ -17,8 +17,8 @@ import com.rabie.notes.data.models.Note
 import com.rabie.notes.screens.addnote.AddNoteActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import com.google.firebase.database.DatabaseReference
-
-
+import com.rabie.notes.data.models.SpannableNote
+import com.rabie.notes.screens.addnotespannable.AddNoteWithSpannabLe
 
 
 class MainActivity : AppCompatActivity() {
@@ -39,9 +39,9 @@ class MainActivity : AppCompatActivity() {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
                 Log.e("datasnapshot", dataSnapshot.toString())
-                var items = ArrayList<Note>()
+                var items = ArrayList<SpannableNote>()
                 dataSnapshot.children.forEach {
-                    val value = it.getValue(Note::class.java)
+                    val value = it.getValue(SpannableNote::class.java)
                     if (value != null) {
                         Log.e("read value", "Value is: " + value!!.toString())
                        value.id=it.key.toString()
@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
 
         btnAdd.setOnClickListener(object : View.OnClickListener {
             override fun onClick(p0: View?) {
-                startActivity(Intent(this@MainActivity, AddNoteActivity::class.java))
+                startActivity(Intent(this@MainActivity, AddNoteWithSpannabLe::class.java))
             }
 
         })
@@ -106,4 +106,5 @@ class MainActivity : AppCompatActivity() {
              }
          })
      }
+
 }

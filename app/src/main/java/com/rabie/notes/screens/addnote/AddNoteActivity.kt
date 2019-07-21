@@ -22,6 +22,7 @@ import kotlinx.android.synthetic.main.activity_add_note.*
 class AddNoteActivity : AppCompatActivity() {
     val database = FirebaseDatabase.getInstance()
     var myRef = database.getReference("notes")
+
      var noteToUpdate:Note?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
