@@ -12,31 +12,88 @@ import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.rabie.notes.R
-import com.rabie.notes.data.models.Note
 import com.rabie.notes.data.models.SpannableNote
+import com.rabie.notes.viewModels.NoteViewModel
 import kotlinx.android.synthetic.main.activity_add_note_with_spannab_le.*
 import java.util.regex.Pattern
 
 
 class AddNoteWithSpannabLe : AppCompatActivity() {
-    val database = FirebaseDatabase.getInstance()
-    var myRef = database.getReference("notes")
     var name = ""
-    var title = ""
-
+    lateinit var mViewModel: NoteViewModel
     var price: Double = 0.0
-    var noteToUpdate:SpannableNote?=null
+    var noteToUpdate: SpannableNote? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_note_with_spannab_le)
-
+        mViewModel = ViewModelProviders.of(this).get(NoteViewModel::class.java)
         noteToUpdate = intent.getParcelableExtra<SpannableNote>("note")
 
+        addNoteTextWatcher()
+        if (noteToUpdate != null) {
+            tvNote.setText(noteToUpdate!!.note)
+        }
+        btnSave.setOnClickListener(object : View.OnClickListener {
+            override fun onClick(p0: View?) {
+                val spannableNote = SpannableNote(tvNote.text.toString(), name, price)
+                if (!name.isEmpty()) {
+                    if(noteToUpdate==null){
+                        mViewModel.addNewNote(spannableNote).observe(this@AddNoteWithSpannabLe, Observer {
+                            if (it) {
+
+                            }
+                        })
+                    }else{
+                        noteToUpdate!!.note=tvNote.text.toString()
+                        mViewModel.updateNote(noteToUpdate!!).observe(this@AddNoteWithSpannabLe, Observer {
+                            if (it) {
+                                AlertDialog.Builder(this@AddNoteWithSpannabLe)
+                                    .setTitle("Update Note")
+                                    .setMessage("Note saved Successfully !")
+                                    .setPositiveButton("Ok", DialogInterface.OnClickListener { dialogInterface, i ->
+                                        finish()
+
+                                    }).create().show()
+                            }
+                        })
+                    }
+
+                    AlertDialog.Builder(this@AddNoteWithSpannabLe)
+                        .setTitle(" Note")
+                        .setMessage("Note saved Successfully !")
+                        .setPositiveButton("Ok", DialogInterface.OnClickListener { dialogInterface, i ->
+                            finish()
+
+                        }).create().show()
+                } else {
+                    tvNote.error = "you must tag a name !!"
+                }
+
+            }
+
+        })
+    }
+
+    fun nameAutoComplete(str: String) {
+        mViewModel.getNamesForAutoComplete(str).observe(this, Observer {
+
+            val adapter =
+                ArrayAdapter<String>(
+                    this@AddNoteWithSpannabLe,
+                    android.R.layout.select_dialog_item,
+                    it
+                )
+            tvNote.setAdapter(adapter)
+        })
+
+
+    }
+
+    fun addNoteTextWatcher() {
         tvNote.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(p0: Editable?) {
 
@@ -53,6 +110,7 @@ class AddNoteWithSpannabLe : AppCompatActivity() {
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                     name = p0.substring(start, end)
+                    noteToUpdate?.name=name
                     nameAutoComplete(name)
 
 
@@ -69,7 +127,7 @@ class AddNoteWithSpannabLe : AppCompatActivity() {
                         end,
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
-                    title = p0.substring(start, end)
+
 
                 }
                 val pattern3 = Pattern.compile("-?[0-9]{0,10}")
@@ -77,18 +135,26 @@ class AddNoteWithSpannabLe : AppCompatActivity() {
                 while (matcher3.find()) {
                     val start = matcher3.start()
                     val end = matcher3.end()
-
-                    p0!!.setSpan(
-                        ForegroundColorSpan(Color.RED),
-                        start,
-                        end,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
                     try {
-                        price = p0.substring(start, end).toDouble()
+                        price = p0!!.substring(start, end).toDouble()
                     } catch (e: NumberFormatException) {
 
                     }
+                    if (price < 0)
+                        p0!!.setSpan(
+                            ForegroundColorSpan(Color.RED),
+                            start,
+                            end,
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    else
+                        p0!!.setSpan(
+                            ForegroundColorSpan(Color.GREEN),
+                            start,
+                            end,
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+
 
                     Log.e("price", price.toString())
 
@@ -104,62 +170,6 @@ class AddNoteWithSpannabLe : AppCompatActivity() {
 
             }
 
-        })
-        if(noteToUpdate!=null){
-            tvNote.setText(noteToUpdate!!.note)
-        }
-        btnSave.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(p0: View?) {
-                val spannableNote = SpannableNote(tvNote.text.toString(), name, price)
-                if (!name.isEmpty()) {
-                    myRef.push().setValue(spannableNote).addOnSuccessListener {
-                        if (!this@AddNoteWithSpannabLe.isDestroyed)
-                            AlertDialog.Builder(this@AddNoteWithSpannabLe)
-                                .setTitle("New Note")
-                                .setMessage("Note saved Successfully !")
-                                .setPositiveButton("Ok", DialogInterface.OnClickListener { dialogInterface, i ->
-                                    finish()
-
-                                }).create().show()
-
-                    }
-                } else {
-                    tvNote.error = "you must tag a name !!"
-                }
-
-            }
-
-        })
-    }
-
-    fun nameAutoComplete(str: String) {
-        val query = myRef.orderByChild("name").startAt(str).limitToFirst(4)
-        query.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(p0: DatabaseError) {
-
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                var items = ArrayList<String>()
-                p0.children.forEach {
-                    Log.e("autocomplete", it.toString())
-                    val value = it.getValue(SpannableNote::class.java)
-
-                    if (value != null) {
-                        Log.e("read value", "Value is: " + value!!.toString())
-                        items.add(value.name)
-
-                    }
-
-                }
-                val adapter =
-                    ArrayAdapter<String>(
-                        this@AddNoteWithSpannabLe,
-                        android.R.layout.select_dialog_item,
-                        items
-                    )
-                tvNote.setAdapter(adapter)
-            }
         })
     }
 }

@@ -24,7 +24,7 @@
 
         </activity>
         <activity
-                android:name=".screens.NotesOfUserActivity"
+                android:name=".screens.usernotes.NotesOfUserActivity"
                 android:parentActivityName=".screens.home.MainActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"

@@ -3,7 +3,7 @@ package com.rabie.notes.data.models
 import android.os.Parcel
 import android.os.Parcelable
 
-data class SpannableNote(val note:String="",val name:String="",var price: Double=0.0) :Parcelable{
+data class SpannableNote(var note:String="",var name:String="",var price: Double=0.0) :Parcelable{
     var id:String=""
 
     constructor(parcel: Parcel) : this(

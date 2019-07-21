@@ -9,9 +9,9 @@
         tools:context=".screens.addnotespannable.AddNoteWithSpannabLe">
 
     <AutoCompleteTextView
-            android:text="type a note"
+            android:hint="type a note"
             android:layout_width="0dp"
-            android:layout_height="160dp"
+            android:layout_height="260dp"
             android:id="@+id/tvNote"
             android:gravity="top|start"
             app:layout_constraintTop_toTopOf="parent"

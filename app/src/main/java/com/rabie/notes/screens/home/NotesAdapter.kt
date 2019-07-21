@@ -3,7 +3,15 @@ package com.rabie.notes.screens.home
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
+import android.text.Spannable
+import android.text.method.LinkMovementMethod
+import android.text.style.BackgroundColorSpan
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -14,16 +22,9 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.FirebaseDatabase
 import com.rabie.notes.R
-import com.rabie.notes.data.models.Note
-import com.rabie.notes.screens.addnote.AddNoteActivity
-import android.graphics.Color
-import android.text.Spannable
-import android.text.style.BackgroundColorSpan
-import android.text.style.ForegroundColorSpan
 import com.rabie.notes.data.models.SpannableNote
-import com.rabie.notes.screens.NotesOfUserActivity
+import com.rabie.notes.screens.usernotes.NotesOfUserActivity
 import com.rabie.notes.screens.addnotespannable.AddNoteWithSpannabLe
-import java.lang.NumberFormatException
 import java.util.*
 import java.util.regex.Pattern
 
@@ -55,23 +56,38 @@ class NotesAdapter : RecyclerView.Adapter<NotesAdapter.ItemViewHolder> {
     override fun onBindViewHolder(holder: ItemViewHolder, p1: Int) {
         Log.e("onBindViewHolder", p1.toString())
         val note = notes.get(p1)
-    /*    holder.tvUserName.text = note.name
-        if(note.name.equals(lastName)){
-            holder.tvUserName.visibility=View.GONE
-        }else{
-            holder.tvUserName.visibility=View.VISIBLE
+
+        val clickableSpan = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                // We display a Toast. You could do anything you want here.
+                Toast.makeText(holder.itemView.context, "Clicked", Toast.LENGTH_SHORT).show()
+               Log.e("clickable span","clickable span")
+                val intent = Intent(holder.itemView.context, NotesOfUserActivity::class.java)
+                intent.putExtra("name", note.name)
+                holder.itemView.context.startActivity(intent)
+            }
         }
-        holder.tvUserName.setTextColor(getRandomColor())
-        lastName=note.name*/
         val span = Spannable.Factory.getInstance().newSpannable(note.note)
         val pattern = Pattern.compile("(?i)(?<!\\\\S)@[a-z]{1,}(?!\\\\S)")
         val matcher = pattern.matcher(span)
         while (matcher.find()) {
             val start = matcher.start()
-            val  end = matcher.end()
+            val end = matcher.end()
 
             span!!.setSpan(
                 BackgroundColorSpan(getRandomColor()),
+                start,
+                end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            span.setSpan(
+                clickableSpan,
+                start,
+                end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            span.setSpan(
+                StyleSpan(Typeface.BOLD),
                 start,
                 end,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -83,7 +99,7 @@ class NotesAdapter : RecyclerView.Adapter<NotesAdapter.ItemViewHolder> {
         val matcher2 = pattern2.matcher(span)
         while (matcher2.find()) {
             val start = matcher2.start()
-            val  end = matcher2.end()
+            val end = matcher2.end()
 
             span!!.setSpan(
                 ForegroundColorSpan(Color.GRAY),
@@ -96,27 +112,37 @@ class NotesAdapter : RecyclerView.Adapter<NotesAdapter.ItemViewHolder> {
         }
         val pattern3 = Pattern.compile("-?[0-9]{0,10}")
         val matcher3 = pattern3.matcher(span)
+        var pri = 0.0
         while (matcher3.find()) {
             val start = matcher3.start()
-            val  end = matcher3.end()
+            val end = matcher3.end()
 
-            span.setSpan(
-                ForegroundColorSpan(Color.RED),
-                start,
-                end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
             try {
-              //  price=p0.substring(start,end).toDouble()
-            }catch (e: NumberFormatException){
+                pri = span!!.substring(start, end).toDouble()
+            } catch (e: NumberFormatException) {
 
             }
-            }
+            if (pri < 0)
+                span!!.setSpan(
+                    ForegroundColorSpan(Color.RED),
+                    start,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            else
+                span!!.setSpan(
+                    ForegroundColorSpan(Color.GREEN),
+                    start,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+        }
         holder.tvNote.text = span
-
+        holder.tvNote.setMovementMethod(LinkMovementMethod.getInstance())
+        holder.tvNote.isClickable=true
         holder.ivEdite.setOnClickListener(object : View.OnClickListener {
             override fun onClick(p0: View?) {
-               Toast.makeText(p0!!.context, "edit clicked", Toast.LENGTH_SHORT).show()
+                Toast.makeText(p0!!.context, "edit clicked", Toast.LENGTH_SHORT).show()
                 val intent = Intent(holder.itemView.context, AddNoteWithSpannabLe::class.java)
                 intent.putExtra("note", note)
                 holder.itemView.context.startActivity(intent)
@@ -143,11 +169,9 @@ class NotesAdapter : RecyclerView.Adapter<NotesAdapter.ItemViewHolder> {
             }
 
         })
-        holder.tvUserName.setOnClickListener(object :View.OnClickListener{
+        holder.tvUserName.setOnClickListener(object : View.OnClickListener {
             override fun onClick(p0: View?) {
-               /* val intent=Intent(holder.itemView.context,NotesOfUserActivity::class.java)
-                intent.putExtra("name",note.userName)
-                holder.itemView.context.startActivity(intent)*/
+
             }
 
         })
@@ -165,10 +189,10 @@ class NotesAdapter : RecyclerView.Adapter<NotesAdapter.ItemViewHolder> {
 
 
         constructor(itemView: View) : super(itemView) {
-            tvUserName = itemView.findViewById(com.rabie.notes.R.id.tvName)
-            tvNote = itemView.findViewById<TextView>(com.rabie.notes.R.id.tvNote)
-            ivEdite = itemView.findViewById<ImageView>(com.rabie.notes.R.id.ivEdit)
-            ivDelete = itemView.findViewById<ImageView>(com.rabie.notes.R.id.ivDelete)
+            tvUserName = itemView.findViewById(R.id.tvName)
+            tvNote = itemView.findViewById<TextView>(R.id.tvNote)
+            ivEdite = itemView.findViewById<ImageView>(R.id.ivEdit)
+            ivDelete = itemView.findViewById<ImageView>(R.id.ivDelete)
         }
     }
 
@@ -187,8 +211,9 @@ class NotesAdapter : RecyclerView.Adapter<NotesAdapter.ItemViewHolder> {
                 tvPrice.setTextColor(tvPrice.context.resources.getColor(com.rabie.notes.R.color.red))
         }
     }
+
     fun getRandomColor(): Int {
         val rnd = Random()
-        return Color.argb(240, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
+        return Color.argb(90, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
     }
 }
